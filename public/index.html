@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API计费管理系统</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .auth-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .auth-form {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .auth-form h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+            font-size: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: #667eea;
+            border: 2px solid #667eea;
+            margin-top: 15px;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 14px;
+            width: auto;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #2ed573 0%, #1e90ff 100%);
+        }
+
+        .dashboard {
+            display: none;
+        }
+
+        .header {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #333;
+            margin: 0;
+            font-size: 32px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .balance {
+            background: linear-gradient(135deg, #2ed573 0%, #1e90ff 100%);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-card .value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 25px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #eee;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            color: #666;
+            transition: all 0.3s;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-top: 20px;
+        }
+
+        .api-key {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .api-key-info {
+            flex: 1;
+        }
+
+        .api-key-name {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .api-key-value {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            color: #666;
+            background: #e9ecef;
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+
+        .api-key-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+        }
+
+        .close {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid transparent;
+            font-weight: 500;
+        }
+
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 20px;
+                text-align: center;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .api-key {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录/注册界面 -->
+    <div id="authContainer" class="auth-container">
+        <div class="auth-form">
+            <!-- 登录表单 -->
+            <div id="loginForm">
+                <h2>🔐 管理登录</h2>
+                <div id="loginAlert"></div>
+                <form onsubmit="login(event)">
+                    <div class="form-group">
+                        <label>用户名</label>
+                        <input type="text" id="loginUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label>密码</label>
+                        <input type="password" id="loginPassword" required>
+                    </div>
+                    <button type="submit" class="btn">登录</button>
+                    <button type="button" class="btn btn-secondary" onclick="showRegister()">注册新账户</button>
+                </form>
+            </div>
+
+            <!-- 注册表单 -->
+            <div id="registerForm" style="display: none;">
+                <h2>📝 注册账户</h2>
+                <div id="registerAlert"></div>
+                <form onsubmit="register(event)">
+                    <div class="form-group">
+                        <label>用户名</label>
+                        <input type="text" id="registerUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label>邮箱</label>
+                        <input type="email" id="registerEmail" required>
+                    </div>
+                    <div class="form-group">
+                        <label>密码</label>
+                        <input type="password" id="registerPassword" required>
+                    </div>
+                    <button type="submit" class="btn">注册</button>
+                    <button type="button" class="btn btn-secondary" onclick="showLogin()">已有账户？登录</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- 仪表板 -->
+    <div id="dashboard" class="dashboard">
+        <div class="container">
+            <!-- 头部 -->
+            <div class="header">
+                <h1>🚀 API计费管理系统</h1>
+                <div class="user-info">
+                    <span id="username" style="font-weight: 500;"></span>
+                    <span id="balance" class="balance">余额: $0.00</span>
+                    <button class="btn btn-small" onclick="logout()">退出</button>
+                </div>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>今日Token用量</h3>
+                    <div class="value" id="todayTokens">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>今日费用</h3>
+                    <div class="value" id="todayCost">$0.00</div>
+                </div>
+                <div class="stat-card">
+                    <h3>今日请求数</h3>
+                    <div class="value" id="todayRequests">0</div>
+                </div>
+                <div class="stat-card">
+                    <h3>本月总计</h3>
+                    <div class="value" id="monthlyTotal">$0.00</div>
+                </div>
+            </div>
+
+            <!-- 标签页 -->
+            <div class="section">
+                <div class="tabs">
+                    <div class="tab active" onclick="showTab('overview')">📊 概览</div>
+                    <div class="tab" onclick="showTab('keys')">🔑 API密钥</div>
+                    <div class="tab" onclick="showTab('usage')">📈 用量详情</div>
+                    <div class="tab" onclick="showTab('test')">🧪 API测试</div>
+                </div>
+
+                <!-- 概览标签页 -->
+                <div id="overviewTab" class="tab-content active">
+                    <h2>📈 用量趋势</h2>
+                    <div class="chart-container">
+                        <canvas id="usageChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- API密钥标签页 -->
+                <div id="keysTab" class="tab-content">
+                    <div class="flex-between">
+                        <h2>🔑 API密钥管理</h2>
+                        <button class="btn btn-small btn-success" onclick="showCreateKeyModal()">生成新密钥</button>
+                    </div>
+                    <div id="apiKeysList"></div>
+                </div>
+
+                <!-- 用量详情标签页 -->
+                <div id="usageTab" class="tab-content">
+                    <div class="flex-between">
+                        <h2>📈 用量详情</h2>
+                        <select id="usagePeriod" onchange="loadUsageDetails()" style="padding: 8px 12px; border-radius: 6px; border: 1px solid #ddd;">
+                            <option value="day">今日</option>
+                            <option value="week">本周</option>
+                            <option value="month" selected>本月</option>
+                        </select>
+                    </div>
+                    <div id="usageDetails"></div>
+                </div>
+
+                <!-- API测试标签页 -->
+                <div id="testTab" class="tab-content">
+                    <h2>🧪 API测试工具</h2>
+                    <div style="background: #f8f9fa; padding: 25px; border-radius: 15px; margin-top: 20px;">
+                        <div class="form-group">
+                            <label>选择API密钥</label>
+                            <select id="testApiKey">
+                                <option value="">请选择API密钥</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>选择模型</label>
+                            <select id="testModel">
+                                <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+                                <option value="gpt-4">GPT-4</option>
+                                <option value="gpt-4o">GPT-4O</option>
+                                <option value="claude-3-sonnet">Claude 3 Sonnet</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>测试消息</label>
+                            <textarea id="testMessage" rows="4">你好，这是一条测试消息！</textarea>
+                        </div>
+                        <button class="btn btn-success" onclick="testAPI()">🚀 发送测试请求</button>
+                        <div id="testResult" style="margin-top: 20px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建密钥模态框 -->
+    <div id="createKeyModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('createKeyModal')">&times;</span>
+            <h2>🔑 生成新的API密钥</h2>
+            <form onsubmit="createApiKey(event)">
+                <div class="form-group">
+                    <label>密钥名称</label>
+                    <input type="text" id="keyName" placeholder="例如: 生产环境密钥" required>
+                </div>
+                <button type="submit" class="btn btn-success">生成密钥</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentUser = null;
+        let authToken = localStorage.getItem('authToken');
+        let usageChart = null;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (authToken) {
+                loadDashboard();
+            }
+        });
+
+        function showRegister() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+        }
+
+        function showLogin() {
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+        }
+
+        async function register(event) {
+            event.preventDefault();
+            const username = document.getElementById('registerUsername').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+
+            try {
+                const response = await fetch('/admin/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    authToken = data.token;
+                    localStorage.setItem('authToken', authToken);
+                    currentUser = data.user;
+                    showAlert('registerAlert', '注册成功！正在加载...', 'success');
+                    setTimeout(() => loadDashboard(), 1000);
+                } else {
+                    showAlert('registerAlert', data.error || '注册失败', 'error');
+                }
+            } catch (error) {
+                showAlert('registerAlert', '网络错误，请重试', 'error');
+            }
+        }
+
+        async function login(event) {
+            event.preventDefault();
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch('/admin/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    authToken = data.token;
+                    localStorage.setItem('authToken', authToken);
+                    currentUser = data.user;
+                    loadDashboard();
+                } else {
+                    showAlert('loginAlert', data.error || '登录失败', 'error');
+                }
+            } catch (error) {
+                showAlert('loginAlert', '网络错误，请重试', 'error');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('authToken');
+            authToken = null;
+            currentUser = null;
+            document.getElementById('authContainer').style.display = 'flex';
+            document.getElementById('dashboard').style.display = 'none';
+        }
+
+        async function loadDashboard() {
+            try {
+                const userResponse = await fetch('/admin/user/profile', {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (userResponse.ok) {
+                    const userData = await userResponse.json();
+                    document.getElementById('username').textContent = userData.username;
+                    document.getElementById('balance').textContent = `余额: $${parseFloat(userData.balance).toFixed(2)}`;
+                    
+                    document.getElementById('authContainer').style.display = 'none';
+                    document.getElementById('dashboard').style.display = 'block';
+                    
+                    await Promise.all([
+                        loadStats(),
+                        loadApiKeys(),
+                        loadUsageDetails()
+                    ]);
+                } else {
+                    logout();
+                }
+            } catch (error) {
+                console.error('Failed to load dashboard:', error);
+                logout();
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const [dayStats, monthStats] = await Promise.all([
+                    fetch('/admin/usage/stats?period=day', {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    }),
+                    fetch('/admin/usage/stats?period=month', {
+                        headers: { 'Authorization': `Bearer ${authToken}` }
+                    })
+                ]);
+
+                if (dayStats.ok && monthStats.ok) {
+                    const dayData = await dayStats.json();
+                    const monthData = await monthStats.json();
+                    
+                    updateStatsDisplay(dayData.summary, monthData.summary);
+                    updateChart(monthData.stats);
+                }
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        function updateStatsDisplay(dayData, monthData) {
+            document.getElementById('todayTokens').textContent = (dayData.total_tokens || 0).toLocaleString();
+            document.getElementById('todayCost').textContent = `$${(dayData.total_cost || 0).toFixed(4)}`;
+            document.getElementById('todayRequests').textContent = (dayData.total_requests || 0).toLocaleString();
+            document.getElementById('monthlyTotal').textContent = `$${(monthData.total_cost || 0).toFixed(2)}`;
+        }
+
+        function updateChart(stats) {
+            const ctx = document.getElementById('usageChart').getContext('2d');
+            
+            if (usageChart) {
+                usageChart.destroy();
+            }
+
+            const dailyStats = {};
+            stats.forEach(stat => {
+                const date = new Date(stat.date).toLocaleDateString();
+                if (!dailyStats[date]) {
+                    dailyStats[date] = { tokens: 0, cost: 0 };
+                }
+                dailyStats[date].tokens += parseInt(stat.total_tokens) || 0;
+                dailyStats[date].cost += parseFloat(stat.total_cost) || 0;
+            });
+
+            const dates = Object.keys(dailyStats).sort();
+            const tokens = dates.map(date => dailyStats[date].tokens);
+            const costs = dates.map(date => dailyStats[date].cost);
+
+            usageChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Token用量',
+                        data: tokens,
+                        borderColor: 'rgb(102, 126, 234)',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        yAxisID: 'y',
+                        tension: 0.4
+                    }, {
+                        label: '费用 ($)',
+                        data: costs,
+                        borderColor: 'rgb(118, 75, 162)',
+                        backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                        yAxisID: 'y1',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Token数量' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            title: { display: true, text: '费用 ($)' },
+                            grid: { drawOnChartArea: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function loadApiKeys() {
+            try {
+                const response = await fetch('/admin/keys', {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (response.ok) {
+                    const keys = await response.json();
+                    displayApiKeys(keys);
+                    updateTestKeyOptions(keys.filter(k => k.is_active));
+                }
+            } catch (error) {
+                console.error('Failed to load API keys:', error);
+            }
+        }
+
+        function displayApiKeys(keys) {
+            const container = document.getElementById('apiKeysList');
+            
+            if (keys.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">暂无API密钥，请生成一个新的密钥。</div>';
+                return;
+            }
+
+            container.innerHTML = keys.map(key => `
+                <div class="api-key">
+                    <div class="api-key-info">
+                        <div class="api-key-name">${key.key_name}</div>
+                        <div class="api-key-value">${key.api_key}</div>
+                        <small style="color: #999;">创建: ${new Date(key.created_at).toLocaleString()}</small>
+                    </div>
+                    <div class="api-key-actions">
+                        <button class="btn btn-small" onclick="copyToClipboard('${key.api_key}')">复制</button>
+                        <button class="btn btn-small btn-danger" onclick="deleteApiKey(${key.id})">删除</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadUsageDetails() {
+            const period = document.getElementById('usagePeriod')?.value || 'month';
+            
+            try {
+                const response = await fetch(`/admin/usage/stats?period=${period}`, {
+                    headers: { 'Authorization': `Bearer ${authToken}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    displayUsageDetails(data.stats);
+                }
+            } catch (error) {
+                console.error('Failed to load usage details:', error);
+            }
+        }
+
+        function displayUsageDetails(stats) {
+            const container = document.getElementById('usageDetails');
+            
+            if (stats.length === 0) {
+                container.innerHTML = '<div class="alert alert-info">暂无用量数据</div>';
+                return;
+            }
+
+            const tableHTML = `
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f8f9fa;">
+                            <th style="padding: 15px; text-align: left;">日期</th>
+                            <th style="padding: 15px; text-align: left;">模型</th>
+                            <th style="padding: 15px; text-align: left;">请求数</th>
+                            <th style="padding: 15px; text-align: left;">Token</th>
+                            <th style="padding: 15px; text-align: left;">费用</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${stats.map(stat => `
+                            <tr style="border-bottom: 1px solid #eee;">
+                                <td style="padding: 15px;">${new Date(stat.date).toLocaleDateString()}</td>
+                                <td style="padding: 15px;">${stat.model || 'Unknown'}</td>
+                                <td style="padding: 15px;">${(stat.total_requests || 0).toLocaleString()}</td>
+                                <td style="padding: 15px;">${(stat.total_tokens || 0).toLocaleString()}</td>
+                                <td style="padding: 15px;">$${parseFloat(stat.total_cost || 0).toFixed(4)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = tableHTML;
+        }
+
+        function updateTestKeyOptions(keys) {
+            const select = document.getElementById('testApiKey');
+            select.innerHTML = '<option value="">请选择API密钥</option>';
+            
+            keys.forEach(key => {
+                const option = document.createElement('option');
+                option.value = key.api_key;
+                option.textContent = key.key_name;
+                select.appendChild(option);
+            });
+        }
+
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            event.target.classList.add('active');
+
+            if (tabName === 'usage') {
+                loadUsageDetails();
+            }
+        }
+
+        function showCreateKeyModal() {
+            document.getElementById('createKeyModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        async function createApiKey(event) {
+            event.preventDefault();
+            const keyName = document.getElementById('keyName').value;
+
+            try {
+                const response = await fetch('/admin/keys/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify({ keyName })
+                });
+
+                if (response.ok) {
+                    closeModal('createKeyModal');
+document.getElementById('keyName').value = '';
+                    await loadApiKeys();
+                    alert('🎉 API密钥生成成功！');
+                } else {
+                    const data = await response.json();
+                    alert('❌ 生成失败: ' + (data.error || '未知错误'));
+                }
+            } catch (error) {
+                alert('❌ 网络错误，请重试');
+            }
+        }
+
+        async function deleteApiKey(keyId) {
+            if (!confirm('⚠️ 确定要删除这个API密钥吗？此操作不可恢复。')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/admin/keys/${keyId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    await loadApiKeys();
+                    alert('🗑️ API密钥已删除');
+                } else {
+                    alert('❌ 删除失败');
+                }
+            } catch (error) {
+                alert('❌ 网络错误，请重试');
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ 已复制';
+                btn.style.background = '#28a745';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                }, 2000);
+            }).catch(() => {
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('📋 已复制到剪贴板');
+            });
+        }
+
+        async function testAPI() {
+            const apiKey = document.getElementById('testApiKey').value;
+            const model = document.getElementById('testModel').value;
+            const message = document.getElementById('testMessage').value;
+
+            if (!apiKey) {
+                alert('❌ 请选择一个API密钥');
+                return;
+            }
+
+            const resultDiv = document.getElementById('testResult');
+            resultDiv.innerHTML = '<div class="alert alert-info">🚀 发送请求中...</div>';
+
+            try {
+                const response = await fetch('/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': apiKey
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        messages: [{ role: 'user', content: message }],
+                        max_tokens: 150
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-success">
+                            <h4>✅ 请求成功 (${response.status})</h4>
+                            <p><strong>🤖 响应:</strong></p>
+                            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                                ${data.choices[0].message.content}
+                            </div>
+                            <p><strong>📊 用量:</strong> ${data.usage?.total_tokens || 'N/A'} tokens</p>
+                        </div>
+                    `;
+                    setTimeout(() => loadStats(), 2000);
+                } else {
+                    resultDiv.innerHTML = `
+                        <div class="alert alert-error">
+                            <h4>❌ 请求失败 (${response.status})</h4>
+                            <p>${data.error?.message || '未知错误'}</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <div class="alert alert-error">
+                        <h4>❌ 网络错误</h4>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function showAlert(containerId, message, type) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+
+        window.onclick = function(event) {
+            const modals = document.querySelectorAll('.modal');
+            modals.forEach(modal => {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        };
+
+        setInterval(() => {
+            if (authToken && document.getElementById('dashboard').style.display !== 'none') {
+                loadStats();
+            }
+        }, 60000);
+    </script>
+</body>
+</html>
